@@ -1,0 +1,29 @@
+Categories:
+  - Multimedia
+License: MIT
+AuthorName: serrebidev
+WebSite: https://github.com/serrebidev/Accessible-IPTV-Client-Android
+SourceCode: https://github.com/serrebidev/Accessible-IPTV-Client-Android
+IssueTracker: https://github.com/serrebidev/Accessible-IPTV-Client-Android/issues
+Changelog: https://github.com/serrebidev/Accessible-IPTV-Client-Android/releases
+Name: Accessible IPTV
+Summary: Screen-reader-friendly IPTV for Android phones, tablets, and TV
+Description: |-
+  Play live TV, movies, and series from M3U playlists, Xtream Codes accounts,
+  and Stalker portals. Browse XMLTV guides, use catch-up TV, record programmes,
+  and cast to Chromecast or Google TV.
+
+  Designed for TalkBack, Android screen readers, and TV remotes. Includes
+  labelled controls, headings, spoken subtitles, and audio description support.
+  Bring your own playlists and provider accounts; no channels are included.
+
+  These are the developer's original GitHub release APKs, with their original
+  signing certificate. The optional casting feature uses Google Cast libraries.
+AntiFeatures:
+  - NonFreeDep
+RepoType: git
+Repo: https://github.com/serrebidev/Accessible-IPTV-Client-Android.git
+AllowedAPKSigningKeys:
+  - e686d194cd9b6141b605ec8b7e992ed88a112c1113e13725bdeaa5ee88bf10ca
+AutoUpdateMode: None
+UpdateCheckMode: None

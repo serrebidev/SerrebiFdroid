@@ -1,0 +1,10 @@
+sdk_path: /usr/lib/android-sdk
+repo_url: https://fdroid.serrebiradio.com/fdroid/repo
+repo_name: SerrebiFdroid
+repo_description: Official Android app releases from serrebidev.
+repo_icon: icon.png
+repo_maxage: 14
+archive_older: 0
+repo_keyalias: serrebifdroid
+# Run fdroid init to generate config.yml, keystore, and random passwords.
+# Keep the generated keystore/keystorepass/keypass settings private.

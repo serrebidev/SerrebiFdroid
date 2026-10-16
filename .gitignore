@@ -1,0 +1,12 @@
+.firecrawl/
+__pycache__/
+*.pyc
+config.yml
+*.p12
+*.jks
+*.keystore
+*.apk
+repo/
+archive/
+tmp/
+stats/

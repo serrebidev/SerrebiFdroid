@@ -1,0 +1,19 @@
+[Unit]
+Description=Import APK releases and publish the signed SerrebiFdroid repository
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=serrebifdroid
+Group=serrebifdroid
+WorkingDirectory=/var/lib/serrebifdroid/repository
+Environment=ANDROID_HOME=/usr/lib/android-sdk
+ExecStart=/usr/bin/python3 /opt/serrebifdroid/sync.py
+TimeoutStartSec=15min
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/serrebifdroid /var/www/serrebifdroid

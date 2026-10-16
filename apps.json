@@ -1,0 +1,8 @@
+[
+  {
+    "github": "serrebidev/Accessible-IPTV-Client-Android",
+    "package": "dev.serrebi.accessibleiptv",
+    "asset_pattern": "AccessibleIPTV-v.*\\.apk",
+    "signer_sha256": "e686d194cd9b6141b605ec8b7e992ed88a112c1113e13725bdeaa5ee88bf10ca"
+  }
+]
