@@ -1,0 +1,29 @@
+Categories:
+  - Reading
+License: MIT
+AuthorName: serrebidev
+WebSite: https://github.com/serrebidev/BlindRSS-Android
+SourceCode: https://github.com/serrebidev/BlindRSS-Android
+IssueTracker: https://github.com/serrebidev/BlindRSS-Android/issues
+Changelog: https://github.com/serrebidev/BlindRSS-Android/releases
+Name: BlindRSS
+Summary: TalkBack-first RSS reader and podcast player
+Description: |-
+  Read RSS, Atom, RDF, and JSON feeds, import and export OPML, and play
+  podcasts with speed control, chapters, sleep timer, and offline downloads.
+  Sync with Miniflux, FreshRSS, Inoreader, Feedbin, NewsBlur, and other
+  hosted services, or keep feeds on the device.
+
+  Designed for TalkBack, with labelled controls, headings, custom actions on
+  article rows, and spoken sync announcements. Android port of BlindRSS.
+
+  These are the developer's original GitHub release APKs, with their original
+  signing certificate. Some optional sync services are non-free.
+AntiFeatures:
+  - NonFreeNet
+RepoType: git
+Repo: https://github.com/serrebidev/BlindRSS-Android.git
+AllowedAPKSigningKeys:
+  - e686d194cd9b6141b605ec8b7e992ed88a112c1113e13725bdeaa5ee88bf10ca
+AutoUpdateMode: None
+UpdateCheckMode: None

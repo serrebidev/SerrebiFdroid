@@ -19,6 +19,8 @@ The public site is https://fdroid.serrebiradio.com/. The `/repo/` path also work
 ## Apps
 
 - **Accessible IPTV**: https://github.com/serrebidev/Accessible-IPTV-Client-Android
+- **BlindPilot**: https://github.com/serrebidev/BlindPilot-Android
+- **BlindRSS**: https://github.com/serrebidev/BlindRSS-Android
 
 Apps without published APK releases are not imported.
 This is an independent repository, separate from f-droid.org's

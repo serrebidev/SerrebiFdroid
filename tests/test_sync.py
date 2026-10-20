@@ -1,5 +1,6 @@
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -84,6 +85,15 @@ class SyncTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.sync.store_apk(incoming, destination, retired)
             self.assertFalse(destination.exists())
+
+    def test_metadata_pins_configured_signing_keys(self):
+        root = Path(__file__).parents[1]
+        apps = json.loads(root.joinpath("apps.json").read_text())
+        for app in apps:
+            metadata = root.joinpath("metadata", app["package"] + ".yml").read_text()
+            self.assertIn("AllowedAPKSigningKeys:\n  - " + app["signer_sha256"] + "\n", metadata)
+        self.assertEqual({path.stem for path in root.joinpath("metadata").glob("*.yml")},
+                         {app["package"] for app in apps})
 
 
 if __name__ == "__main__":

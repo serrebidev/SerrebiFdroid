@@ -1,0 +1,28 @@
+Categories:
+  - Internet
+License: MIT
+AuthorName: serrebidev
+WebSite: https://github.com/serrebidev/BlindPilot-Android
+SourceCode: https://github.com/serrebidev/BlindPilot-Android
+IssueTracker: https://github.com/serrebidev/BlindPilot-Android/issues
+Changelog: https://github.com/serrebidev/BlindPilot-Android/releases
+Name: BlindPilot
+Summary: Accessible AI chat for blind Android users
+Description: |-
+  Chat with AI models through cloud providers, a remote Hermes server, or
+  offline GGUF models that run on the device. Device actions need your
+  approval before they run.
+
+  Built for TalkBack and Backtalk, with labelled controls and custom actions
+  on chat messages. Bring your own provider accounts and API keys.
+
+  These are the developer's original GitHub release APKs, with their original
+  signing certificate. Cloud models use third-party network services.
+AntiFeatures:
+  - NonFreeNet
+RepoType: git
+Repo: https://github.com/serrebidev/BlindPilot-Android.git
+AllowedAPKSigningKeys:
+  - e686d194cd9b6141b605ec8b7e992ed88a112c1113e13725bdeaa5ee88bf10ca
+AutoUpdateMode: None
+UpdateCheckMode: None
