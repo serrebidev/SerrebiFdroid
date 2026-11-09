@@ -120,6 +120,13 @@ class SyncTests(unittest.TestCase):
                 self.sync.store_apk(incoming, destination, retired)
             self.assertFalse(destination.exists())
 
+    def test_failed_import_still_resigns_index(self):
+        with tempfile.TemporaryDirectory() as directory,                 patch.object(self.sync, "WORK", Path(directory)),                 patch.object(self.sync, "import_app", side_effect=[ValueError("no release"), None, None]) as imported,                 patch.object(self.sync, "publish") as published:
+            with self.assertRaises(SystemExit):
+                self.sync.main()
+        self.assertEqual(imported.call_count, 3)
+        published.assert_called_once()
+
     def test_metadata_pins_configured_signing_keys(self):
         root = Path(__file__).parents[1]
         apps = json.loads(root.joinpath("apps.json").read_text())

@@ -107,47 +107,46 @@ def fetch(url):
     return urllib.request.urlopen(request, timeout=120)
 
 
-def main():
-    WORK.joinpath("repo").mkdir(parents=True, exist_ok=True)
-    apps = json.loads(SOURCE.joinpath("apps.json").read_text())
-    for app in apps:
-        with fetch(f"{FORGEJO_API}/repos/{app['forgejo']}/releases/latest") as response:
-            release = json.load(response)
-        asset = select_asset(release, app)
-        expected_prefix = f"{FORGEJO_WEB}/{app['forgejo']}/releases/download/"
-        if not asset["browser_download_url"].startswith(expected_prefix):
-            raise ValueError("APK download URL does not belong to configured repository")
-        expected_sha256 = None
-        sidecar = sidecar_asset(release, asset)
-        if sidecar is not None:
-            if not sidecar["browser_download_url"].startswith(expected_prefix):
-                raise ValueError("Checksum download URL does not belong to configured repository")
-            with fetch(sidecar["browser_download_url"]) as response:
-                expected_sha256 = parse_sha256_sidecar(response.read())
-        cached = None
-        for path in WORK.joinpath("repo").glob(app["package"] + "_*.apk"):
-            if expected_sha256 is not None:
-                if sha256(path) == expected_sha256:
-                    cached = path
-                    break
-            elif path.stat().st_size == asset["size"]:
+def import_app(app):
+    with fetch(f"{FORGEJO_API}/repos/{app['forgejo']}/releases/latest") as response:
+        release = json.load(response)
+    asset = select_asset(release, app)
+    expected_prefix = f"{FORGEJO_WEB}/{app['forgejo']}/releases/download/"
+    if not asset["browser_download_url"].startswith(expected_prefix):
+        raise ValueError("APK download URL does not belong to configured repository")
+    expected_sha256 = None
+    sidecar = sidecar_asset(release, asset)
+    if sidecar is not None:
+        if not sidecar["browser_download_url"].startswith(expected_prefix):
+            raise ValueError("Checksum download URL does not belong to configured repository")
+        with fetch(sidecar["browser_download_url"]) as response:
+            expected_sha256 = parse_sha256_sidecar(response.read())
+    cached = None
+    for path in WORK.joinpath("repo").glob(app["package"] + "_*.apk"):
+        if expected_sha256 is not None:
+            if sha256(path) == expected_sha256:
                 cached = path
                 break
-        if cached:
-            verify_download(cached, asset, expected_sha256)
-            inspect_apk(cached, app)
-            print(f"Already imported {app['package']} {release['tag_name']}", flush=True)
-        else:
-            with tempfile.TemporaryDirectory(dir=WORK) as directory:
-                incoming = Path(directory) / "download.apk"
-                with fetch(asset["browser_download_url"]) as response, incoming.open("wb") as output:
-                    shutil.copyfileobj(response, output)
-                verify_download(incoming, asset, expected_sha256)
-                version = inspect_apk(incoming, app)
-                filename = f"{app['package']}_{version}.apk"
-                store_apk(incoming, WORK / "repo" / filename, WORK / "retired" / filename)
-                print(f"Imported {app['package']} {release['tag_name']}", flush=True)
+        elif path.stat().st_size == asset["size"]:
+            cached = path
+            break
+    if cached:
+        verify_download(cached, asset, expected_sha256)
+        inspect_apk(cached, app)
+        print(f"Already imported {app['package']} {release['tag_name']}", flush=True)
+    else:
+        with tempfile.TemporaryDirectory(dir=WORK) as directory:
+            incoming = Path(directory) / "download.apk"
+            with fetch(asset["browser_download_url"]) as response, incoming.open("wb") as output:
+                shutil.copyfileobj(response, output)
+            verify_download(incoming, asset, expected_sha256)
+            version = inspect_apk(incoming, app)
+            filename = f"{app['package']}_{version}.apk"
+            store_apk(incoming, WORK / "repo" / filename, WORK / "retired" / filename)
+            print(f"Imported {app['package']} {release['tag_name']}", flush=True)
 
+
+def publish(apps):
     shutil.copytree(SOURCE / "metadata", WORK / "metadata", dirs_exist_ok=True)
     retire_unlisted(WORK, {app["package"] for app in apps})
     shutil.copyfile(SOURCE / "icon.png", WORK / "icon.png")
@@ -163,6 +162,23 @@ def main():
         if not WORK.joinpath("repo", apk.name).exists():
             apk.unlink()
     print("Signed repository published", flush=True)
+
+
+def main():
+    WORK.joinpath("repo").mkdir(parents=True, exist_ok=True)
+    apps = json.loads(SOURCE.joinpath("apps.json").read_text())
+    failed = []
+    for app in apps:
+        # One app's broken or missing release must not stop the index re-signing:
+        # clients reject indexes older than 14 days, which would drop every app.
+        try:
+            import_app(app)
+        except Exception as error:
+            print(f"Import failed for {app['package']}: {error!r}", flush=True)
+            failed.append(app["package"])
+    publish(apps)
+    if failed:
+        raise SystemExit(f"Import failed for: {', '.join(failed)}")
 
 
 if __name__ == "__main__":

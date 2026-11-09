@@ -41,7 +41,9 @@ with the same certificate can update normally.
 The standard Debian `fdroidserver` package creates and signs legacy, v1, and v2
 indexes. APKs are published before indexes. Previous APKs for listed apps remain available.
 The repository signature is renewed each run; clients reject indexes older than
-14 days. A failed import or index build leaves the last published repository
+14 days. A failed import for one app is logged and the service exits non-zero,
+but the index is still re-signed with the APKs already held, so it never expires
+because of one bad release. A failed index build leaves the last published repository
 available. Monitor the service if updates stop.
 
 To add another app, add its Forgejo repository, exact Android package ID,

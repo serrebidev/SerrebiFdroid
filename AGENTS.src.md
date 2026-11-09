@@ -10,3 +10,4 @@ Signed binary F-Droid repository for serrebidev's published Android apps.
 - Standard fdroidserver handles indexes and repository signatures.
 - Tests: python -m unittest discover -s tests -v.
 - Server paths and deployment steps are documented in README.md.
+- Forgejo (git.serrebiradio.com) is the source of truth: code, releases, issues, CI. A GitHub copy, if any, is a push mirror only; never point apps.json or URLs back at it.
