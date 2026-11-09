@@ -48,6 +48,40 @@ class SyncTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.sync.verify_download(apk, asset)
 
+    def test_verifies_size_without_digest_and_hash_with_sidecar(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / "app.apk"
+            apk.write_bytes(b"APK bytes")
+            digest = hashlib.sha256(b"APK bytes").hexdigest()
+            # Forgejo assets carry no digest field: size is always enforced.
+            self.sync.verify_download(apk, {"size": 9})
+            with self.assertRaises(ValueError):
+                self.sync.verify_download(apk, {"size": 10})
+            # A parsed .sha256 sidecar is enforced when the caller provides it.
+            self.sync.verify_download(apk, {"size": 9}, digest)
+            with self.assertRaises(ValueError):
+                self.sync.verify_download(apk, {"size": 9}, "b" * 64)
+
+    def test_finds_and_parses_sha256_sidecar(self):
+        apk = {"name": "app-v1.apk"}
+        sidecar = {"name": "app-v1.apk.sha256"}
+        release = {"assets": [{"name": "other.txt"}, apk, sidecar]}
+        self.assertIs(self.sync.sidecar_asset(release, apk), sidecar)
+        self.assertIsNone(self.sync.sidecar_asset({"assets": [apk]}, apk))
+        digest = "c" * 64
+        self.assertEqual(self.sync.parse_sha256_sidecar(digest.encode()), digest)
+        self.assertEqual(self.sync.parse_sha256_sidecar(digest.encode() + b"  app-v1.apk\n"), digest)
+        with self.assertRaises(ValueError):
+            self.sync.parse_sha256_sidecar(b"not a checksum")
+
+    def test_apps_use_forgejo_repositories(self):
+        root = Path(__file__).parents[1]
+        apps = json.loads(root.joinpath("apps.json").read_text())
+        self.assertTrue(apps)
+        for app in apps:
+            self.assertNotIn("github", app)
+            self.assertTrue(app["forgejo"].startswith("serrebi/"))
+
     def test_existing_version_cannot_be_replaced(self):
         with tempfile.TemporaryDirectory() as directory:
             destination = Path(directory) / "app_18.apk"

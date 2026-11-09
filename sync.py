@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import configured GitHub release APKs, then sign and publish an F-Droid index."""
+"""Import configured Forgejo release APKs, then sign and publish an F-Droid index."""
 
 import hashlib
 import json
@@ -14,6 +14,8 @@ import urllib.request
 SOURCE = Path(__file__).resolve().parent
 WORK = Path("/var/lib/serrebifdroid/repository")
 PUBLIC = Path("/var/www/serrebifdroid/fdroid/repo")
+FORGEJO_API = "https://git.serrebiradio.com/api/v1"
+FORGEJO_WEB = "https://git.serrebiradio.com"
 
 
 def run(*args):
@@ -35,12 +37,34 @@ def sha256(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def verify_download(path, asset):
-    digest = asset.get("digest", "") or ""
-    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
-        raise ValueError("GitHub asset must provide a SHA-256 digest")
-    if path.stat().st_size != asset["size"] or "sha256:" + sha256(path) != digest:
-        raise ValueError("APK size or SHA-256 does not match the GitHub release")
+def sidecar_asset(release, asset):
+    """Return the "<apk>.sha256" sidecar asset, if the release carries one."""
+    target = asset["name"] + ".sha256"
+    for candidate in release.get("assets", []):
+        if candidate["name"] == target:
+            return candidate
+    return None
+
+
+def parse_sha256_sidecar(data: bytes):
+    match = re.search(rb"\b[0-9a-f]{64}\b", data)
+    if not match:
+        raise ValueError("Release SHA-256 sidecar is malformed")
+    return match.group(0).decode("ascii")
+
+
+def verify_download(path, asset, expected_sha256=None):
+    # Forgejo assets carry no digest field, so the caller passes the SHA-256
+    # parsed from a ".sha256" sidecar asset when the release provides one.
+    # A digest embedded in the asset itself is still honoured when present.
+    if expected_sha256 is None:
+        digest = asset.get("digest", "") or ""
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            expected_sha256 = digest[len("sha256:"):]
+    if path.stat().st_size != asset["size"]:
+        raise ValueError("APK size does not match the release asset")
+    if expected_sha256 is not None and sha256(path) != expected_sha256:
+        raise ValueError("APK SHA-256 does not match the release asset")
 
 
 def inspect_apk(path, app):
@@ -87,19 +111,30 @@ def main():
     WORK.joinpath("repo").mkdir(parents=True, exist_ok=True)
     apps = json.loads(SOURCE.joinpath("apps.json").read_text())
     for app in apps:
-        with fetch(f"https://api.github.com/repos/{app['github']}/releases/latest") as response:
+        with fetch(f"{FORGEJO_API}/repos/{app['forgejo']}/releases/latest") as response:
             release = json.load(response)
         asset = select_asset(release, app)
-        expected_prefix = f"https://github.com/{app['github']}/releases/download/"
+        expected_prefix = f"{FORGEJO_WEB}/{app['forgejo']}/releases/download/"
         if not asset["browser_download_url"].startswith(expected_prefix):
             raise ValueError("APK download URL does not belong to configured repository")
+        expected_sha256 = None
+        sidecar = sidecar_asset(release, asset)
+        if sidecar is not None:
+            if not sidecar["browser_download_url"].startswith(expected_prefix):
+                raise ValueError("Checksum download URL does not belong to configured repository")
+            with fetch(sidecar["browser_download_url"]) as response:
+                expected_sha256 = parse_sha256_sidecar(response.read())
         cached = None
         for path in WORK.joinpath("repo").glob(app["package"] + "_*.apk"):
-            if "sha256:" + sha256(path) == asset.get("digest"):
+            if expected_sha256 is not None:
+                if sha256(path) == expected_sha256:
+                    cached = path
+                    break
+            elif path.stat().st_size == asset["size"]:
                 cached = path
                 break
         if cached:
-            verify_download(cached, asset)
+            verify_download(cached, asset, expected_sha256)
             inspect_apk(cached, app)
             print(f"Already imported {app['package']} {release['tag_name']}", flush=True)
         else:
@@ -107,7 +142,7 @@ def main():
                 incoming = Path(directory) / "download.apk"
                 with fetch(asset["browser_download_url"]) as response, incoming.open("wb") as output:
                     shutil.copyfileobj(response, output)
-                verify_download(incoming, asset)
+                verify_download(incoming, asset, expected_sha256)
                 version = inspect_apk(incoming, app)
                 filename = f"{app['package']}_{version}.apk"
                 store_apk(incoming, WORK / "repo" / filename, WORK / "retired" / filename)

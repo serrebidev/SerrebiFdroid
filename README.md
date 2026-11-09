@@ -18,9 +18,9 @@ The public site is https://fdroid.serrebiradio.com/. The `/repo/` path also work
 
 ## Apps
 
-- **Accessible IPTV**: https://github.com/serrebidev/Accessible-IPTV-Client-Android
-- **BlindPilot**: https://github.com/serrebidev/BlindPilot-Android
-- **BlindRSS**: https://github.com/serrebidev/BlindRSS-Android
+- **Accessible IPTV**: https://git.serrebiradio.com/serrebi/Accessible-IPTV-Client-Android
+- **BlindPilot**: https://git.serrebiradio.com/serrebi/BlindPilot-Android
+- **BlindRSS**: https://git.serrebiradio.com/serrebi/BlindRSS-Android
 
 Apps without published APK releases are not imported.
 This is an independent repository, separate from f-droid.org's
@@ -29,12 +29,14 @@ declared through F-Droid's `NonFreeDep` metadata.
 
 ## Publishing
 
-The server checks the configured GitHub repositories approximately hourly. Only
+The server checks the configured Forgejo repositories approximately hourly. Only
 stable releases and explicitly matching APK assets are imported. The importer
-checks the GitHub asset's SHA-256 and size, the Android package ID, and the pinned
-APK signing certificate. A published package/version cannot be replaced with
-different bytes. APKs retain their original developer signatures, so existing
-installations signed with the same certificate can update normally.
+checks the asset's size and SHA-256 (Forgejo assets carry no digest field, so
+the hash is verified against a `.sha256` sidecar asset when the release
+provides one), the Android package ID, and the pinned APK signing certificate.
+A published package/version cannot be replaced with different bytes. APKs
+retain their original developer signatures, so existing installations signed
+with the same certificate can update normally.
 
 The standard Debian `fdroidserver` package creates and signs legacy, v1, and v2
 indexes. APKs are published before indexes. Previous APKs for listed apps remain available.
@@ -42,7 +44,7 @@ The repository signature is renewed each run; clients reject indexes older than
 14 days. A failed import or index build leaves the last published repository
 available. Monitor the service if updates stop.
 
-To add another app, add its GitHub repository, exact Android package ID,
+To add another app, add its Forgejo repository, exact Android package ID,
 asset-name pattern, and certificate SHA-256 to `apps.json`. Add its metadata file
 under `metadata/`, including the same `AllowedAPKSigningKeys` certificate.
 Review and deploy these changes explicitly; there is no automatic app discovery.
@@ -59,7 +61,7 @@ must exist before running setup:
 ```sh
 yunohost domain add fdroid.serrebiradio.com
 yunohost domain cert install fdroid.serrebiradio.com --no-checks
-git clone https://github.com/serrebidev/SerrebiFdroid.git /opt/serrebifdroid
+git clone https://git.serrebiradio.com/serrebi/SerrebiFdroid.git /opt/serrebifdroid
 cd /opt/serrebifdroid
 sh deploy/setup.sh
 ```
@@ -89,7 +91,7 @@ After changing deployment files, rerun `sh deploy/setup.sh` from the source dire
 The service runs as an unprivileged account with access to its private state and
 public output only. Online signing enables unattended updates; protect the
 server and keep an independent private backup of the config and keystore.
-Neither file belongs in Git, GitHub artifacts, or the web root.
+Neither file belongs in Git, Forgejo artifacts, or the web root.
 
 ## Checks
 
@@ -98,7 +100,7 @@ python -m unittest discover -s tests -v
 sh -n deploy/setup.sh
 ```
 
-GitHub Actions runs these checks. End-to-end publication requires the Debian
+Forgejo Actions runs these checks. End-to-end publication requires the Debian
 F-Droid tools. On the server, verify public signatures, APKs, and private-file isolation:
 
 ```sh
