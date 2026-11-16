@@ -2,6 +2,12 @@
 
 Developer-signed Android APK releases, served through a signed F-Droid repository.
 
+[![Join SerrebiProjects on Telegram](https://img.shields.io/badge/Telegram-SerrebiProjects-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/SerrebiProjects)
+
+**Questions, bugs, or release news?** Join the [SerrebiProjects Telegram group](https://t.me/SerrebiProjects), the fastest place to get help.
+
+More serrebi projects: [projects.serrebiradio.com](https://projects.serrebiradio.com)
+
 ## Add to F-Droid
 
 In F-Droid, open **Settings > Repositories**, choose **Add repository**, and paste:
@@ -111,3 +117,7 @@ runuser -u serrebifdroid -- python3 /opt/serrebifdroid/verify_live.py
 ```
 
 See the upstream [repository setup guide](https://f-droid.org/en/docs/Setup_an_F-Droid_App_Repo/).
+
+## Credits
+
+See [CREDITS.md](CREDITS.md) for where the ideas behind this project came from, and the third-party projects it builds on.
